@@ -12,9 +12,6 @@ jobs:
   release:
     needs:
       - test
-      - npm
-      - jsr
-    if: ${{ always() && needs.test.result == 'success' && (needs.npm.result == 'success' || needs.npm.result == 'skipped') && (needs.jsr.result == 'success' || needs.jsr.result == 'skipped') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
