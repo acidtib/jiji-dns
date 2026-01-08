@@ -9,7 +9,7 @@ import type {
   CorrosionChangeMessage,
   CorrosionColumnsMessage,
   CorrosionMessage,
-  CorrosionRowsMessage,
+  CorrosionRowMessage,
   DnsRecord,
   SubscriberEvents,
 } from "./types.ts";
@@ -199,8 +199,8 @@ export class CorrosionSubscriber {
 
       if ("columns" in message) {
         this.handleColumns(message);
-      } else if ("rows" in message) {
-        this.handleRows(message);
+      } else if ("row" in message) {
+        this.handleRow(message);
       } else if ("change" in message) {
         this.handleChange(message);
       } else if ("eoq" in message) {
@@ -220,14 +220,14 @@ export class CorrosionSubscriber {
   }
 
   /**
-   * Handle rows message (initial data batch)
+   * Handle single row message (initial data)
    */
-  private handleRows(message: CorrosionRowsMessage): void {
-    for (const row of message.rows) {
-      const record = this.rowToRecord(row);
-      if (record) {
-        this.events.onUpsert(record);
-      }
+  private handleRow(message: CorrosionRowMessage): void {
+    // message.row is [rowIndex, [values...]]
+    const [_rowIndex, values] = message.row;
+    const record = this.rowToRecord(values);
+    if (record) {
+      this.events.onUpsert(record);
     }
   }
 

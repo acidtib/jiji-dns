@@ -93,9 +93,9 @@ export interface CorrosionColumnsMessage {
   columns: string[];
 }
 
-/** Initial rows message with existing data */
-export interface CorrosionRowsMessage {
-  rows: (string | number | null)[][];
+/** Single row message with row index and values */
+export interface CorrosionRowMessage {
+  row: [number, (string | number | null)[]];
 }
 
 /** Change event for inserts */
@@ -134,13 +134,16 @@ export interface CorrosionChangeMessage {
 
 /** End of query marker */
 export interface CorrosionEoqMessage {
-  eoq: true;
+  eoq: {
+    time: number;
+    change_id: number;
+  };
 }
 
 /** Union type for all Corrosion subscription messages */
 export type CorrosionMessage =
   | CorrosionColumnsMessage
-  | CorrosionRowsMessage
+  | CorrosionRowMessage
   | CorrosionChangeMessage
   | CorrosionEoqMessage;
 
