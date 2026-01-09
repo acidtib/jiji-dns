@@ -171,7 +171,7 @@ export interface DnsServerConfig {
   listenAddr: string;
   /** Service domain suffix (e.g., "jiji") */
   serviceDomain: string;
-  /** Corrosion API address (e.g., "http://127.0.0.1:8080") */
+  /** Corrosion API address (e.g., "http://127.0.0.1:9220") */
   corrosionApi: string;
   /** TTL for DNS responses in seconds (default: 60) */
   ttl?: number;
@@ -187,7 +187,7 @@ export interface DnsServerConfig {
 export function parseConfig(): DnsServerConfig {
   const listenAddr = Deno.env.get("LISTEN_ADDR");
   const serviceDomain = Deno.env.get("SERVICE_DOMAIN") || "jiji";
-  const corrosionApi = Deno.env.get("CORROSION_API") || "http://127.0.0.1:8080";
+  const corrosionApi = Deno.env.get("CORROSION_API") || "http://127.0.0.1:9220";
   const ttl = parseInt(Deno.env.get("DNS_TTL") || "60", 10);
   const reconnectInterval = parseInt(Deno.env.get("RECONNECT_INTERVAL") || "5000", 10);
 
