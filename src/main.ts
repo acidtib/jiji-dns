@@ -18,7 +18,6 @@ const BANNER = `
     | | | | | | (_| | | | | \\__ \\
    _/ |_|_|_|  \\__,_|_|_| |_|___/
   |__/
-  DNS server with Corrosion subscriptions
 `;
 
 async function main(): Promise<void> {

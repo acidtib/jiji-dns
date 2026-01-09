@@ -26,14 +26,13 @@ SELECT
   c.service,
   c.server_id,
   c.ip,
-  c.healthy,
   c.health_status,
   c.started_at,
   c.instance_id,
   s.project
 FROM containers c
 JOIN services s ON c.service = s.name
-WHERE c.healthy = 1 OR c.health_status = 'healthy'
+WHERE c.health_status = 'healthy'
 `.trim();
 
 /**
@@ -44,11 +43,10 @@ const COLUMNS = {
   SERVICE: 1,
   SERVER_ID: 2,
   IP: 3,
-  HEALTHY: 4,
-  HEALTH_STATUS: 5,
-  STARTED_AT: 6,
-  INSTANCE_ID: 7,
-  PROJECT: 8,
+  HEALTH_STATUS: 4,
+  STARTED_AT: 5,
+  INSTANCE_ID: 6,
+  PROJECT: 7,
 };
 
 /**
@@ -263,7 +261,6 @@ export class CorrosionSubscriber {
     const service = row[COLUMNS.SERVICE];
     const serverId = row[COLUMNS.SERVER_ID];
     const ip = row[COLUMNS.IP];
-    const healthy = row[COLUMNS.HEALTHY];
     const healthStatus = row[COLUMNS.HEALTH_STATUS];
     const startedAt = row[COLUMNS.STARTED_AT];
     const instanceId = row[COLUMNS.INSTANCE_ID];
@@ -280,13 +277,8 @@ export class CorrosionSubscriber {
       return null;
     }
 
-    // Determine health: check health_status first, fall back to healthy column
-    let isHealthy = true;
-    if (typeof healthStatus === "string") {
-      isHealthy = healthStatus === "healthy";
-    } else if (typeof healthy === "number") {
-      isHealthy = healthy === 1;
-    }
+    // Determine health from health_status column
+    const isHealthy = healthStatus === "healthy";
 
     return {
       containerId: id,
