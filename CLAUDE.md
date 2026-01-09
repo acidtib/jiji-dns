@@ -1,6 +1,7 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this
+repository.
 
 ## Quick Start Commands
 
@@ -40,7 +41,9 @@ LISTEN_ADDR=10.210.1.1:53 deno task run
 
 ## Architecture Overview
 
-jiji-dns is a lightweight DNS server that provides service discovery for [jiji](https://github.com/acidtib/jiji) deployments. It subscribes to Corrosion's real-time streaming API and maintains an in-memory DNS cache.
+jiji-dns is a lightweight DNS server that provides service discovery for
+[jiji](https://github.com/acidtib/jiji) deployments. It subscribes to Corrosion's real-time
+streaming API and maintains an in-memory DNS cache.
 
 ### Component Flow
 
@@ -51,35 +54,41 @@ Corrosion DB ─HTTP Stream─► CorrosionSubscriber ─► DnsCache ◄── 
 
 ### Key Components
 
-**`src/corrosion_subscriber.ts`** - Maintains HTTP streaming connection to Corrosion's `/v1/subscriptions` endpoint. Parses NDJSON messages and emits events:
+**`src/corrosion_subscriber.ts`** - Maintains HTTP streaming connection to Corrosion's
+`/v1/subscriptions` endpoint. Parses NDJSON messages and emits events:
+
 - `onUpsert(record)` - Container added or health status changed
 - `onDelete(containerId)` - Container removed
 - `onReady()` - Initial sync complete
 - Auto-reconnects with exponential backoff on connection loss
 
 **`src/dns_cache.ts`** - In-memory cache indexed by hostname and container ID.
+
 - Generates hostnames: `{project}-{service}` and `{project}-{service}-{instanceId}`
 - Newest-container-wins logic per service/server combination
 - Only healthy containers returned in DNS lookups
 
 **`src/dns_server.ts`** - UDP DNS server implementing RFC 1035.
+
 - Routes `*.{serviceDomain}` queries to cache
 - Forwards other queries to system resolvers from `/etc/resolv.conf`
 - Falls back to 8.8.8.8 and 1.1.1.1 if no resolvers found
 
 **`src/dns_protocol.ts`** - DNS packet parsing and building.
+
 - `parseDnsQuery()` - Parses UDP packets, extracts domain and query type
 - `buildDnsResponse()` - Constructs A record responses
 - Handles label compression (RFC 1035)
 
-**`src/types.ts`** - All TypeScript interfaces and the `parseConfig()` function for environment variable parsing.
+**`src/types.ts`** - All TypeScript interfaces and the `parseConfig()` function for environment
+variable parsing.
 
 ### DNS Resolution Patterns
 
-| Pattern | Example | Description |
-|---------|---------|-------------|
-| `{project}-{service}.{domain}` | `casa-api.jiji` | All healthy containers for service |
-| `{project}-{service}-{instance}.{domain}` | `casa-api-primary.jiji` | Specific instance |
+| Pattern                                   | Example                 | Description                        |
+| ----------------------------------------- | ----------------------- | ---------------------------------- |
+| `{project}-{service}.{domain}`            | `casa-api.jiji`         | All healthy containers for service |
+| `{project}-{service}-{instance}.{domain}` | `casa-api-primary.jiji` | Specific instance                  |
 
 ### Corrosion Subscription Protocol
 
@@ -93,6 +102,7 @@ WHERE c.health_status = 'healthy'
 ```
 
 Messages are NDJSON with these types:
+
 - `{"columns": [...]}` - Column names (first message)
 - `{"row": [index, [values...]]}` - Initial data rows
 - `{"change": {"Insert"|"Update"|"Delete": {...}}}` - Real-time updates
@@ -100,7 +110,8 @@ Messages are NDJSON with these types:
 
 ## Relationship to jiji
 
-jiji-dns is a standalone service that reads from the Corrosion database that jiji manages. It runs at the host level (not containerized) to avoid circular dependencies with DNS resolution.
+jiji-dns is a standalone service that reads from the Corrosion database that jiji manages. It runs
+at the host level (not containerized) to avoid circular dependencies with DNS resolution.
 
 - **jiji** writes container registrations to Corrosion
 - **jiji-dns** subscribes to changes and serves DNS queries

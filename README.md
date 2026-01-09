@@ -1,10 +1,12 @@
 # jiji-dns
 
-A lightweight DNS server for [jiji](https://github.com/acidtib/jiji). Uses Corrosion subscriptions for real time container updates and serves DNS queries for the `.jiji` domain.
+A lightweight DNS server for [jiji](https://github.com/acidtib/jiji). Uses Corrosion subscriptions
+for real time container updates and serves DNS queries for the `.jiji` domain.
 
 ## Features
 
-- **Real time updates**: Subscribes to Corrosion's streaming API for instant DNS updates when containers are deployed or removed
+- **Real time updates**: Subscribes to Corrosion's streaming API for instant DNS updates when
+  containers are deployed or removed
 - **In memory cache**: No file I/O for DNS lookups
 - **Health aware**: Only returns healthy containers in DNS responses
 - **Auto reconnect**: Automatically reconnects to Corrosion on connection loss
@@ -14,10 +16,10 @@ A lightweight DNS server for [jiji](https://github.com/acidtib/jiji). Uses Corro
 
 jiji-dns resolves service names in the following format:
 
-| Pattern | Example | Description |
-|---------|---------|-------------|
-| `{project}-{service}.jiji` | `casa-api.jiji` | Resolves to all healthy containers for the service |
-| `{project}-{service}-{instance}.jiji` | `casa-api-primary.jiji` | Resolves to a specific instance |
+| Pattern                               | Example                 | Description                                        |
+| ------------------------------------- | ----------------------- | -------------------------------------------------- |
+| `{project}-{service}.jiji`            | `casa-api.jiji`         | Resolves to all healthy containers for the service |
+| `{project}-{service}-{instance}.jiji` | `casa-api-primary.jiji` | Resolves to a specific instance                    |
 
 Non `.jiji` queries are forwarded to the system resolver (`/etc/resolv.conf`).
 
@@ -68,19 +70,20 @@ The compiled binary will be in `build/jiji-dns`.
 
 ### Deploy with Jiji
 
-jiji-dns is automatically installed when you run `jiji network init`. The binary is placed at `/opt/jiji/dns/jiji-dns` and managed by systemd.
+jiji-dns is automatically installed when you run `jiji network init`. The binary is placed at
+`/opt/jiji/dns/jiji-dns` and managed by systemd.
 
 ## Configuration
 
 jiji-dns is configured via environment variables:
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `LISTEN_ADDR` | Yes | - | Address to listen on (e.g., `10.210.1.1:53`) |
-| `SERVICE_DOMAIN` | No | `jiji` | Domain suffix for service discovery |
-| `CORROSION_API` | No | `http://127.0.0.1:8080` | Corrosion API endpoint |
-| `DNS_TTL` | No | `60` | TTL for DNS responses in seconds |
-| `RECONNECT_INTERVAL` | No | `5000` | Reconnect interval in milliseconds |
+| Variable             | Required | Default                 | Description                                  |
+| -------------------- | -------- | ----------------------- | -------------------------------------------- |
+| `LISTEN_ADDR`        | Yes      | -                       | Address to listen on (e.g., `10.210.1.1:53`) |
+| `SERVICE_DOMAIN`     | No       | `jiji`                  | Domain suffix for service discovery          |
+| `CORROSION_API`      | No       | `http://127.0.0.1:8080` | Corrosion API endpoint                       |
+| `DNS_TTL`            | No       | `60`                    | TTL for DNS responses in seconds             |
+| `RECONNECT_INTERVAL` | No       | `5000`                  | Reconnect interval in milliseconds           |
 
 ## Usage
 
