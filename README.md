@@ -41,8 +41,13 @@ Non `.jiji` queries are forwarded to the system resolver (`/etc/resolv.conf`).
 │           │             │ In-Memory DNS Cache             │ │
 │           │             │                                 │ │
 │           └────────────>│ Map<hostname, DnsRecord[]>      │ │
-│                         │ - casa-api.jiji → [10.210.1.5]  │ │
+│                         │ - casa-api.jiji → [10.210.1.5,  │ │
+│                         │                    10.210.2.3]  │ │
 │                         │ - casa-db.jiji → [10.210.2.3]   │ │
+│                         │ - casa-api-primary.jiji         │ │
+│                         │            → [10.210.1.5]       │ │
+│                         │ - casa-api-secondary.jiji       │ │
+│                         │            → [10.210.2.3]       │ │
 │                         └─────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
 ```
