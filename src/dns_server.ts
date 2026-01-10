@@ -154,6 +154,8 @@ export class DnsServer {
     transactionId: number,
     queryType: DnsQueryType,
   ): Uint8Array {
+    const ttl = this.config.ttl ?? 60;
+
     // We only handle A record queries
     if (queryType !== DnsQueryType.A) {
       return buildDnsResponse({
@@ -161,7 +163,7 @@ export class DnsServer {
         responseCode: DnsResponseCode.NOERROR,
         domain,
         ips: [],
-        ttl: this.config.ttl || 60,
+        ttl,
       });
     }
 
@@ -169,24 +171,15 @@ export class DnsServer {
     const hostname = extractHostname(domain, this.config.serviceDomain);
     const ips = this.cache.get(hostname);
 
-    if (ips.length === 0) {
-      // No records found
-      return buildDnsResponse({
-        transactionId,
-        responseCode: DnsResponseCode.NXDOMAIN,
-        domain,
-        ips: [],
-        ttl: this.config.ttl || 60,
-      });
-    }
+    // Return NXDOMAIN if no records found, otherwise return all IPs
+    const responseCode = ips.length === 0 ? DnsResponseCode.NXDOMAIN : DnsResponseCode.NOERROR;
 
-    // Return all IPs
     return buildDnsResponse({
       transactionId,
-      responseCode: DnsResponseCode.NOERROR,
+      responseCode,
       domain,
       ips,
-      ttl: this.config.ttl || 60,
+      ttl,
     });
   }
 
@@ -247,40 +240,24 @@ export class DnsServer {
    * Load system DNS resolvers from /etc/resolv.conf
    */
   private async loadSystemResolvers(): Promise<string[]> {
+    const fallbackResolvers = ["8.8.8.8", "1.1.1.1"];
+
     try {
       const content = await Deno.readTextFile("/etc/resolv.conf");
-      const resolvers: string[] = [];
 
       // Get all our listen IPs for filtering
-      const ourIps = this.config.listenAddrs.map((addr) => addr.split(":")[0]);
+      const ourIps = new Set(this.config.listenAddrs.map((addr) => addr.split(":")[0]));
+      const skipIps = new Set(["127.0.0.1", "::1", ...ourIps]);
 
-      for (const line of content.split("\n")) {
-        const trimmed = line.trim();
-        if (trimmed.startsWith("nameserver")) {
-          const parts = trimmed.split(/\s+/);
-          if (parts.length >= 2) {
-            const ip = parts[1];
-            // Skip localhost and our own addresses
-            if (
-              ip !== "127.0.0.1" &&
-              ip !== "::1" &&
-              !ourIps.includes(ip)
-            ) {
-              resolvers.push(ip);
-            }
-          }
-        }
-      }
+      const resolvers = content
+        .split("\n")
+        .filter((line) => line.trim().startsWith("nameserver"))
+        .map((line) => line.trim().split(/\s+/)[1])
+        .filter((ip): ip is string => ip !== undefined && !skipIps.has(ip));
 
-      // If no valid resolvers found, use common defaults
-      if (resolvers.length === 0) {
-        return ["8.8.8.8", "1.1.1.1"];
-      }
-
-      return resolvers;
+      return resolvers.length > 0 ? resolvers : fallbackResolvers;
     } catch {
-      // Fallback to public DNS
-      return ["8.8.8.8", "1.1.1.1"];
+      return fallbackResolvers;
     }
   }
 

@@ -4,7 +4,22 @@
  * Handles parsing DNS queries and building DNS responses
  */
 
-import { DnsQuery, DnsQueryType, DnsResponse, DnsResponseCode } from "./types.ts";
+import type { DnsQuery, DnsResponse } from "./types.ts";
+import { DnsQueryType, DnsResponseCode } from "./types.ts";
+
+/**
+ * Concatenate multiple Uint8Array parts into a single array
+ */
+function concatUint8Arrays(parts: Uint8Array[]): Uint8Array {
+  const totalLength = parts.reduce((sum, p) => sum + p.length, 0);
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const part of parts) {
+    result.set(part, offset);
+    offset += part.length;
+  }
+  return result;
+}
 
 /**
  * Parse a DNS query packet
@@ -192,16 +207,7 @@ export function buildDnsResponse(response: DnsResponse): Uint8Array {
     parts.push(ipBytes);
   }
 
-  // Concatenate all parts
-  const totalLength = parts.reduce((sum, p) => sum + p.length, 0);
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const part of parts) {
-    result.set(part, offset);
-    offset += part.length;
-  }
-
-  return result;
+  return concatUint8Arrays(parts);
 }
 
 /**
@@ -259,16 +265,7 @@ export function encodeDomainName(domain: string): Uint8Array {
   // Null terminator
   parts.push(new Uint8Array([0]));
 
-  // Concatenate
-  const totalLength = parts.reduce((sum, p) => sum + p.length, 0);
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const part of parts) {
-    result.set(part, offset);
-    offset += part.length;
-  }
-
-  return result;
+  return concatUint8Arrays(parts);
 }
 
 /**
