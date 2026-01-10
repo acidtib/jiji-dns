@@ -166,12 +166,8 @@ export class DnsCache {
    * Get statistics about the cache
    */
   getStats(): { totalRecords: number; healthyRecords: number; hostnames: number } {
-    let healthyRecords = 0;
-    for (const record of this.byContainerId.values()) {
-      if (record.healthy) {
-        healthyRecords++;
-      }
-    }
+    const records = Array.from(this.byContainerId.values());
+    const healthyRecords = records.filter((r) => r.healthy).length;
 
     return {
       totalRecords: this.byContainerId.size,

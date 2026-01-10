@@ -7,7 +7,6 @@
 
 import type {
   CorrosionChangeMessage,
-  CorrosionColumnsMessage,
   CorrosionMessage,
   CorrosionRowMessage,
   DnsRecord,
@@ -63,7 +62,6 @@ export class CorrosionSubscriber {
   private abortController: AbortController | null = null;
   private reconnectAttempt = 0;
   private isRunning = false;
-  private columnNames: string[] = [];
 
   constructor(
     corrosionApi: string,
@@ -196,7 +194,7 @@ export class CorrosionSubscriber {
       const message = JSON.parse(line) as CorrosionMessage;
 
       if ("columns" in message) {
-        this.handleColumns(message);
+        // Column names message - we use fixed indices so no action needed
       } else if ("row" in message) {
         this.handleRow(message);
       } else if ("change" in message) {
@@ -208,13 +206,6 @@ export class CorrosionSubscriber {
     } catch (error) {
       console.error(`Failed to parse line: ${line}`, error);
     }
-  }
-
-  /**
-   * Handle columns message (first message in stream)
-   */
-  private handleColumns(message: CorrosionColumnsMessage): void {
-    this.columnNames = message.columns;
   }
 
   /**
