@@ -167,8 +167,8 @@ export interface SubscriberEvents {
  * Configuration for the DNS server
  */
 export interface DnsServerConfig {
-  /** Address to listen on (e.g., "10.210.1.1:53") */
-  listenAddr: string;
+  /** Addresses to listen on (e.g., ["10.210.1.1:53", "10.210.128.1:53"]) */
+  listenAddrs: string[];
   /** Service domain suffix (e.g., "jiji") */
   serviceDomain: string;
   /** Corrosion API address (e.g., "http://127.0.0.1:9220") */
@@ -185,18 +185,21 @@ export interface DnsServerConfig {
  * Parse configuration from environment variables
  */
 export function parseConfig(): DnsServerConfig {
-  const listenAddr = Deno.env.get("LISTEN_ADDR");
+  const listenAddrEnv = Deno.env.get("LISTEN_ADDR");
   const serviceDomain = Deno.env.get("SERVICE_DOMAIN") || "jiji";
   const corrosionApi = Deno.env.get("CORROSION_API") || "http://127.0.0.1:9220";
   const ttl = parseInt(Deno.env.get("DNS_TTL") || "60", 10);
   const reconnectInterval = parseInt(Deno.env.get("RECONNECT_INTERVAL") || "5000", 10);
 
-  if (!listenAddr) {
+  if (!listenAddrEnv) {
     throw new Error("LISTEN_ADDR environment variable is required");
   }
 
+  // Support comma-separated addresses (e.g., "10.210.0.1:53,10.210.128.1:53")
+  const listenAddrs = listenAddrEnv.split(",").map((addr) => addr.trim());
+
   return {
-    listenAddr,
+    listenAddrs,
     serviceDomain,
     corrosionApi,
     ttl,

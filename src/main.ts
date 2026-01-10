@@ -33,7 +33,7 @@ async function main(): Promise<void> {
   }
 
   console.log(`Configuration:`);
-  console.log(`  Listen address: ${config.listenAddr}`);
+  console.log(`  Listen addresses: ${config.listenAddrs.join(", ")}`);
   console.log(`  Service domain: ${config.serviceDomain}`);
   console.log(`  Corrosion API:  ${config.corrosionApi}`);
   console.log(`  TTL:            ${config.ttl}s`);
