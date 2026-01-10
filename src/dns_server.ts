@@ -114,7 +114,6 @@ export class DnsServer {
     data: Uint8Array,
     remoteAddr: Deno.Addr,
   ): Promise<void> {
-
     let response: Uint8Array;
 
     try {
