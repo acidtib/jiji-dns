@@ -231,22 +231,26 @@ export class CorrosionSubscriber {
 
   /**
    * Handle change message (real-time updates)
+   *
+   * Corrosion sends changes as arrays:
+   * - ["insert", rowIndex, [values...], changeId]
+   * - ["update", rowIndex, [values...], changeId]
+   * - ["delete", rowIndex, [primaryKeys...], changeId]
    */
   private handleChange(message: CorrosionChangeMessage): void {
     const change = message.change;
 
-    if ("Insert" in change) {
-      const record = this.rowToRecord(change.Insert.values);
+    // change is an array: [operation, rowIndex, values, changeId]
+    const [operation, _rowIndex, values, _changeId] = change;
+
+    if (operation === "insert" || operation === "update") {
+      const record = this.rowToRecord(values);
       if (record) {
         this.events.onUpsert(record);
       }
-    } else if ("Update" in change) {
-      const record = this.rowToRecord(change.Update.values);
-      if (record) {
-        this.events.onUpsert(record);
-      }
-    } else if ("Delete" in change) {
-      const containerId = change.Delete.pk[0];
+    } else if (operation === "delete") {
+      // For delete, values contains the primary key(s)
+      const containerId = values[0];
       if (typeof containerId === "string") {
         this.events.onDelete(containerId);
       }
