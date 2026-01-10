@@ -24,7 +24,7 @@ import { DnsResponseCode } from "./types.ts";
 export class DnsServer {
   private config: DnsServerConfig;
   private cache: DnsCache;
-  private listener: Deno.DatagramConn | null = null;
+  private listeners: Deno.DatagramConn[] = [];
   private isRunning = false;
   private systemResolvers: string[] = [];
 
@@ -37,25 +37,27 @@ export class DnsServer {
    * Start the DNS server
    */
   async start(): Promise<void> {
-    // Parse listen address
-    const [host, portStr] = this.config.listenAddr.split(":");
-    const port = parseInt(portStr, 10);
-
     // Load system resolvers
     this.systemResolvers = await this.loadSystemResolvers();
     console.log(`System resolvers: ${this.systemResolvers.join(", ")}`);
 
-    // Bind to UDP socket
-    this.listener = Deno.listenDatagram({
-      port,
-      hostname: host,
-      transport: "udp",
-    });
+    // Bind to all listen addresses
+    for (const listenAddr of this.config.listenAddrs) {
+      const [host, portStr] = listenAddr.split(":");
+      const port = parseInt(portStr, 10);
+
+      const listener = Deno.listenDatagram({
+        port,
+        hostname: host,
+        transport: "udp",
+      });
+      this.listeners.push(listener);
+      console.log(`DNS server listening on ${listenAddr}`);
+    }
 
     this.isRunning = true;
-    console.log(`DNS server listening on ${this.config.listenAddr}`);
 
-    // Handle incoming queries
+    // Handle incoming queries on all listeners
     await this.handleQueries();
   }
 
@@ -64,25 +66,36 @@ export class DnsServer {
    */
   stop(): void {
     this.isRunning = false;
-    if (this.listener) {
-      this.listener.close();
-      this.listener = null;
+    for (const listener of this.listeners) {
+      listener.close();
     }
+    this.listeners = [];
   }
 
   /**
-   * Main query handling loop
+   * Main query handling loop for all listeners
    */
   private async handleQueries(): Promise<void> {
-    if (!this.listener) {
+    if (this.listeners.length === 0) {
       return;
     }
 
+    // Create a handler for each listener
+    const handlers = this.listeners.map((listener) => this.handleListenerQueries(listener));
+
+    // Wait for all handlers (they run until stopped)
+    await Promise.all(handlers);
+  }
+
+  /**
+   * Handle queries for a single listener
+   */
+  private async handleListenerQueries(listener: Deno.DatagramConn): Promise<void> {
     while (this.isRunning) {
       try {
-        const [data, remoteAddr] = await this.listener.receive();
+        const [data, remoteAddr] = await listener.receive();
         // Handle query in background
-        this.handleQuery(data, remoteAddr).catch((error) => {
+        this.handleQuery(listener, data, remoteAddr).catch((error) => {
           console.error("Error handling query:", error);
         });
       } catch (error) {
@@ -96,11 +109,11 @@ export class DnsServer {
   /**
    * Handle a single DNS query
    */
-  private async handleQuery(data: Uint8Array, remoteAddr: Deno.Addr): Promise<void> {
-    if (!this.listener) {
-      return;
-    }
-
+  private async handleQuery(
+    listener: Deno.DatagramConn,
+    data: Uint8Array,
+    remoteAddr: Deno.Addr,
+  ): Promise<void> {
     let response: Uint8Array;
 
     try {
@@ -127,7 +140,7 @@ export class DnsServer {
 
     // Send response
     try {
-      await this.listener.send(response, remoteAddr);
+      await listener.send(response, remoteAddr);
     } catch (error) {
       console.error("Error sending response:", error);
     }
@@ -238,17 +251,20 @@ export class DnsServer {
       const content = await Deno.readTextFile("/etc/resolv.conf");
       const resolvers: string[] = [];
 
+      // Get all our listen IPs for filtering
+      const ourIps = this.config.listenAddrs.map((addr) => addr.split(":")[0]);
+
       for (const line of content.split("\n")) {
         const trimmed = line.trim();
         if (trimmed.startsWith("nameserver")) {
           const parts = trimmed.split(/\s+/);
           if (parts.length >= 2) {
             const ip = parts[1];
-            // Skip localhost and our own address
+            // Skip localhost and our own addresses
             if (
               ip !== "127.0.0.1" &&
               ip !== "::1" &&
-              !this.config.listenAddr.startsWith(ip)
+              !ourIps.includes(ip)
             ) {
               resolvers.push(ip);
             }
