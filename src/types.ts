@@ -98,38 +98,24 @@ export interface CorrosionRowMessage {
   row: [number, (string | number | null)[]];
 }
 
-/** Change event for inserts */
-export interface CorrosionInsertChange {
-  Insert: {
-    pk: string[];
-    values: (string | number | null)[];
-  };
-}
-
-/** Change event for updates */
-export interface CorrosionUpdateChange {
-  Update: {
-    pk: string[];
-    values: (string | number | null)[];
-  };
-}
-
-/** Change event for deletes */
-export interface CorrosionDeleteChange {
-  Delete: {
-    pk: string[];
-  };
-}
-
-/** Union type for change events */
-export type CorrosionChange =
-  | CorrosionInsertChange
-  | CorrosionUpdateChange
-  | CorrosionDeleteChange;
+/**
+ * Corrosion change event format
+ *
+ * Corrosion sends change events as arrays:
+ * - Insert: ["insert", rowIndex, [values...], changeId]
+ * - Update: ["update", rowIndex, [values...], changeId]
+ * - Delete: ["delete", rowIndex, [primaryKeys...], changeId]
+ */
+export type CorrosionChangeArray = [
+  "insert" | "update" | "delete",
+  number,
+  (string | number | null)[],
+  number,
+];
 
 /** Change message wrapper */
 export interface CorrosionChangeMessage {
-  change: CorrosionChange;
+  change: CorrosionChangeArray;
 }
 
 /** End of query marker */
