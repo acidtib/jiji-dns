@@ -82,13 +82,13 @@ jiji-dns is automatically installed when you run `jiji network init`. The binary
 
 jiji-dns is configured via environment variables:
 
-| Variable             | Required | Default                 | Description                                  |
-| -------------------- | -------- | ----------------------- | -------------------------------------------- |
-| `LISTEN_ADDR`        | Yes      | -                       | Address to listen on (e.g., `10.210.1.1:53`) |
-| `SERVICE_DOMAIN`     | No       | `jiji`                  | Domain suffix for service discovery          |
-| `CORROSION_API`      | No       | `http://127.0.0.1:9220` | Corrosion API endpoint                       |
-| `DNS_TTL`            | No       | `60`                    | TTL for DNS responses in seconds             |
-| `RECONNECT_INTERVAL` | No       | `5000`                  | Reconnect interval in milliseconds           |
+| Variable             | Required | Default                 | Description                                                       |
+| -------------------- | -------- | ----------------------- | ----------------------------------------------------------------- |
+| `LISTEN_ADDR`        | Yes      | -                       | Address(es) to listen on, comma-separated (e.g., `10.210.1.1:53`) |
+| `SERVICE_DOMAIN`     | No       | `jiji`                  | Domain suffix for service discovery                               |
+| `CORROSION_API`      | No       | `http://127.0.0.1:9220` | Corrosion API endpoint                                            |
+| `DNS_TTL`            | No       | `60`                    | TTL for DNS responses in seconds                                  |
+| `RECONNECT_INTERVAL` | No       | `5000`                  | Reconnect interval in milliseconds                                |
 
 ## Usage
 
@@ -124,7 +124,7 @@ systemctl restart jiji-dns
   |__/
 
 Configuration:
-  Listen address: 10.210.1.1:53
+  Listen addresses: 10.210.1.1:53
   Service domain: jiji
   Corrosion API:  http://127.0.0.1:9220
   TTL:            60s
