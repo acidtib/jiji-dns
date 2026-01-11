@@ -1,6 +1,6 @@
 {
   "name": "@jiji/dns",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "exports": "./src/main.ts",
   "unstable": ["net"],
   "tasks": {
