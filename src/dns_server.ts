@@ -156,7 +156,7 @@ export class DnsServer {
   ): Uint8Array {
     const ttl = this.config.ttl ?? 60;
 
-    // We only handle A record queries
+    // We only handle A record queries - return empty response for other types (AAAA, etc.)
     if (queryType !== DnsQueryType.A) {
       return buildDnsResponse({
         transactionId,
@@ -164,6 +164,7 @@ export class DnsServer {
         domain,
         ips: [],
         ttl,
+        queryType, // Echo back the original query type
       });
     }
 
@@ -180,6 +181,7 @@ export class DnsServer {
       domain,
       ips,
       ttl,
+      queryType: DnsQueryType.A,
     });
   }
 

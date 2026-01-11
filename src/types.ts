@@ -82,6 +82,8 @@ export interface DnsResponse {
   ips: string[];
   /** Time to live in seconds */
   ttl: number;
+  /** Query type to echo back (must match the query) */
+  queryType: DnsQueryType;
 }
 
 /**

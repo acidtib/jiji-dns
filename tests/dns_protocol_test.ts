@@ -84,6 +84,7 @@ Deno.test("buildDnsResponse - single IP response", () => {
     domain: "casa-api.jiji",
     ips: ["10.210.1.5"],
     ttl: 60,
+    queryType: DnsQueryType.A,
   });
 
   // Verify it's a valid DNS packet
@@ -109,6 +110,7 @@ Deno.test("buildDnsResponse - multiple IPs", () => {
     domain: "casa-api.jiji",
     ips: ["10.210.1.5", "10.210.2.3"],
     ttl: 60,
+    queryType: DnsQueryType.A,
   });
 
   // Check answer count
@@ -123,6 +125,7 @@ Deno.test("buildDnsResponse - NXDOMAIN", () => {
     domain: "unknown.jiji",
     ips: [],
     ttl: 60,
+    queryType: DnsQueryType.A,
   });
 
   // Check response code
@@ -132,6 +135,39 @@ Deno.test("buildDnsResponse - NXDOMAIN", () => {
   // Check answer count is 0
   const answerCount = (response[6] << 8) | response[7];
   assertEquals(answerCount, 0);
+});
+
+Deno.test("buildDnsResponse - AAAA query echoes correct query type", () => {
+  const response = buildDnsResponse({
+    transactionId: 0x1111,
+    responseCode: DnsResponseCode.NOERROR,
+    domain: "casa-api.jiji",
+    ips: [], // No IPv6 addresses
+    ttl: 60,
+    queryType: DnsQueryType.AAAA,
+  });
+
+  // Verify it's a valid DNS packet
+  assertEquals(response.length > 12, true);
+
+  // Check transaction ID
+  assertEquals((response[0] << 8) | response[1], 0x1111);
+
+  // Check answer count is 0 (no AAAA records)
+  const answerCount = (response[6] << 8) | response[7];
+  assertEquals(answerCount, 0);
+
+  // Find the question section (after 12-byte header)
+  // Skip past domain name to find query type
+  let offset = 12;
+  while (offset < response.length && response[offset] !== 0) {
+    offset += response[offset] + 1;
+  }
+  offset++; // Skip null terminator
+
+  // Query type should be AAAA (28), not A (1)
+  const queryType = (response[offset] << 8) | response[offset + 1];
+  assertEquals(queryType, DnsQueryType.AAAA, "Query type in response should match AAAA");
 });
 
 /**

@@ -179,7 +179,7 @@ export function buildDnsResponse(response: DnsResponse): Uint8Array {
   const questionDomain = encodeDomainName(response.domain);
   const questionMeta = new Uint8Array(4);
   const questionView = new DataView(questionMeta.buffer);
-  questionView.setUint16(0, DnsQueryType.A);
+  questionView.setUint16(0, response.queryType); // Echo back the original query type
   questionView.setUint16(2, 1); // IN class
 
   parts.push(questionDomain);
@@ -223,6 +223,7 @@ export function buildNxdomainResponse(query: DnsQuery): Uint8Array {
     domain: query.domain,
     ips: [],
     ttl: 60,
+    queryType: query.queryType,
   });
 }
 
@@ -239,6 +240,7 @@ export function buildServfailResponse(query: DnsQuery): Uint8Array {
     domain: query.domain,
     ips: [],
     ttl: 0,
+    queryType: query.queryType,
   });
 }
 
